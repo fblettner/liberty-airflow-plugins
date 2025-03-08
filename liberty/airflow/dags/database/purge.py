@@ -5,7 +5,6 @@
 from airflow import DAG
 from airflow.models import Variable
 from airflow.operators.python import PythonOperator, ShortCircuitOperator
-from airflow.utils.dates import days_ago
 from liberty.airflow.plugins.git.utils import purge_old_backups
 import logging
 
