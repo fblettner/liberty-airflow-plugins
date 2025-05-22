@@ -4,7 +4,7 @@
 #
 from airflow import DAG
 from airflow.models import Variable
-from airflow.operators.python import PythonOperator, ShortCircuitOperator
+from airflow.providers.standard.operators.python import PythonOperator, ShortCircuitOperator
 from liberty.airflow.plugins.database.postgres.db_backup import pg_dump
 from liberty.airflow.plugins.database.postgres.db_meta import pg_get_databases
 from liberty.airflow.plugins.git.utils import push_backup
@@ -23,7 +23,7 @@ def backup_db_dag(dag_id, schedule, default_args):
         dag_id=dag_id,
         default_args=default_args,
         description='Backup PostgreSQL databases for Liberty Framework',
-        schedule_interval=schedule,
+        schedule=schedule,
         tags=['database'],
         catchup=False,
     )
