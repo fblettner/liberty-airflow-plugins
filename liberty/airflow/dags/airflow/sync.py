@@ -1,5 +1,5 @@
 from airflow import DAG
-from airflow.operators.python import PythonOperator
+from airflow.providers.standard.operators.python import PythonOperator
 from liberty.airflow.plugins.git.utils import pull_repository
 import logging
 
@@ -16,7 +16,7 @@ def sync_repo_dag(dag_id, schedule, default_args):
         dag_id=dag_id,
         default_args=default_args,
         description='Synchronize dags and plugins from Git',
-        schedule_interval=schedule,
+        schedule=schedule,
         tags=['airflow'],
         catchup=False,
     )

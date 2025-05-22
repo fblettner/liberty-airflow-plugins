@@ -3,20 +3,27 @@ from pyspark.sql import SparkSession
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 import logging
 from liberty.airflow.plugins.database.utils.db_meta import get_connection
-
+from airflow.models import Variable
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def create_spark_session() -> SparkSession:
+    drivers_directory = Variable.get("drivers_directory", default_var="/opt/spark/jars/")
+    log4j_config_path = f"file://{drivers_directory}/log4j2.properties"
+
+    logging.info("Starting Spark session (please ignore Spark's initial stderr warnings)")
     spark_session = SparkSession\
         .builder\
         .appName("LIBERTY") \
         .config("spark.sql.debug.maxToStringFields", "-1") \
-        .config("spark.jars", "/opt/spark/jars/ojdbc11.jar,/opt/spark/jars/postgresql-42.7.4.jar") \
+        .config("spark.jars", f"{drivers_directory}/ojdbc11.jar,{drivers_directory}/postgresql-42.7.4.jar") \
+        .config("spark.driver.extraJavaOptions", f"-Dlog4j.configurationFile={log4j_config_path}") \
+        .config("spark.executor.extraJavaOptions", f"-Dlog4j.configurationFile={log4j_config_path}") \
+        .config("spark.ui.showConsoleProgress", "false") \
         .getOrCreate()
-
+    logging.info("Spark session created successfully")
     return spark_session
 
 

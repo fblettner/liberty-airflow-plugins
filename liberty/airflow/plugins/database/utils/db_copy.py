@@ -2,7 +2,7 @@ import logging
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.types import IntegerType, StringType
 from pyspark.sql.functions import trim, col, regexp_replace
-
+from airflow.models import Variable
 from liberty.airflow.plugins.database.utils.db_meta import get_column_lengths, get_column_types, get_connection
 
 logging.basicConfig(level=logging.INFO)
@@ -58,14 +58,20 @@ def write_data_to_db(spark: SparkSession, data_df: DataFrame, table: str, source
 
 
 def create_spark_session() -> SparkSession:
+    drivers_directory = Variable.get("drivers_directory", default_var="/opt/spark/jars/")
+    log4j_config_path = f"file://{drivers_directory}/log4j2.properties"
 
+    logging.info("Starting Spark session (please ignore Spark's initial stderr warnings)")
     spark_session = SparkSession\
         .builder\
         .appName("LIBERTY") \
         .config("spark.sql.debug.maxToStringFields", "-1") \
-        .config("spark.jars", "/opt/spark/jars/ojdbc11.jar,/opt/spark/jars/postgresql-42.7.4.jar") \
+        .config("spark.jars", f"{drivers_directory}/ojdbc11.jar,{drivers_directory}/postgresql-42.7.4.jar") \
+        .config("spark.driver.extraJavaOptions", f"-Dlog4j.configurationFile={log4j_config_path}") \
+        .config("spark.executor.extraJavaOptions", f"-Dlog4j.configurationFile={log4j_config_path}") \
+        .config("spark.ui.showConsoleProgress", "false") \
         .getOrCreate()
-
+    logging.info("Spark session created successfully")
     return spark_session
 
 def copy_table(conn_source, conn_target, table_name, source_schema, target_schema):

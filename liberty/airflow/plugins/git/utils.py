@@ -68,6 +68,7 @@ def push_backup(local_path, repo_name, databases, conn_id="git_conn"):
         # Create a folder for today's backups
         os.makedirs(today_date, exist_ok=True)
         airflow_home = os.getenv("AIRFLOW_HOME", os.getcwd())
+        os.makedirs(f"{airflow_home}/tmp", exist_ok=True)
 
         # Move all backup files into the dated folder and compress them
         for db in databases:

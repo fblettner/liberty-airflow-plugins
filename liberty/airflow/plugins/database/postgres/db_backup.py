@@ -1,5 +1,5 @@
 import os
-from airflow.operators.bash import BashOperator
+from airflow.providers.standard.operators.bash import BashOperator
 from liberty.airflow.plugins.database.utils.db_meta import get_connection
 
 
