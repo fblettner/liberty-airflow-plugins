@@ -1,6 +1,6 @@
 import logging
 from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.types import IntegerType, StringType
+from pyspark.sql.types import IntegerType, StringType, DecimalType, LongType
 from pyspark.sql.functions import trim, col, regexp_replace
 from airflow.models import Variable
 from liberty.airflow.plugins.database.utils.db_meta import get_column_lengths, get_column_types, get_connection
@@ -21,11 +21,23 @@ def read_data_from_db(spark: SparkSession, table: str, source_conn: dict, source
 
     # Cast all numeric columns to IntegerType
     for field in data_df.schema.fields:
-        if "DecimalType" in str(field.dataType):  
-            data_df = data_df.withColumn(field.name, col(field.name).cast(IntegerType()))
-        elif isinstance(field.dataType, StringType):  
+        dt = field.dataType
+
+        # Handle decimals properly
+        if isinstance(dt, DecimalType):
+            # example policy:
+            # - if scale == 0 and precision <= 18 -> use LongType (maps nicely to BIGINT)
+            # - otherwise keep as DecimalType (you will map to NUMERIC in Postgres)
+            if dt.scale == 0 and dt.precision <= 18:
+                data_df = data_df.withColumn(field.name, col(field.name).cast(LongType()))
+            else:
+                # keep as DecimalType; do not cast to IntegerType
+                pass
+
+        # Handle strings: trim + remove null bytes
+        elif isinstance(dt, StringType):
             data_df = data_df.withColumn(field.name, trim(col(field.name)))
-            data_df = data_df.withColumn(field.name, regexp_replace(col(field.name), "\x00", ""))  # Remove null bytes
+            data_df = data_df.withColumn(field.name, regexp_replace(col(field.name), "\x00", ""))
     return data_df
 
 def lowercase_columns(df: DataFrame) -> DataFrame:
