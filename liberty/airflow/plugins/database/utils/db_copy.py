@@ -25,14 +25,16 @@ def read_data_from_db(spark: SparkSession, table: str, source_conn: dict, source
 
         # Handle decimals properly
         if isinstance(dt, DecimalType):
-            # example policy:
-            # - if scale == 0 and precision <= 18 -> use LongType (maps nicely to BIGINT)
-            # - otherwise keep as DecimalType (you will map to NUMERIC in Postgres)
-            if dt.scale == 0 and dt.precision <= 18:
-                data_df = data_df.withColumn(field.name, col(field.name).cast(LongType()))
+            # JDE: no decimals, integer semantics
+            if dt.scale == 0:
+                # SMALL ints → 32-bit
+                # int max is 2,147,483,647 (10 digits), but to be safe we use precision <= 9
+                if dt.precision <= 9:
+                    data_df = data_df.withColumn(field.name, col(field.name).cast(IntegerType()))
+                else:
+                    data_df = data_df.withColumn(field.name, col(field.name).cast(LongType()))
             else:
-                # keep as DecimalType; do not cast to IntegerType
-                pass
+                data_df = data_df.withColumn(field.name, col(field.name).cast(LongType()))
 
         # Handle strings: trim + remove null bytes
         elif isinstance(dt, StringType):
