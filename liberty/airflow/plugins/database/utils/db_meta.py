@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession, DataFrame
-from airflow.hooks.base import BaseHook
+from airflow.sdk.bases.hook import BaseHook
 from liberty.airflow.plugins.database.oracle.db_meta import ora_get_connection, ora_get_column_lengths, ora_get_column_types
 from liberty.airflow.plugins.database.postgres.db_meta import pg_get_column_lengths, pg_get_column_types, pg_get_connection
 import logging

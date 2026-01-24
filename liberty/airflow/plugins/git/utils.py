@@ -2,7 +2,7 @@
 # Copyright (c) 2024 NOMANA-IT and/or its affiliates.
 # All rights reserved. Use is subject to license terms.
 #
-from airflow.hooks.base import BaseHook
+from airflow.sdk.bases.hook import BaseHook
 from airflow.models import Variable
 import subprocess
 import logging
