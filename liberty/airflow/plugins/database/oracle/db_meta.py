@@ -1,4 +1,4 @@
-from airflow.hooks.base import BaseHook
+from airflow.sdk.bases.hook import BaseHook
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.types import IntegerType, StringType
 
